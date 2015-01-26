@@ -1,0 +1,24 @@
+{
+    "name": "igel/tophub",
+    "description": "End point for Hub.Hyperboria",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Igel Broski",
+            "email": "igel@hyperboria.ca"
+        }
+    ],
+    "require": {
+        "react/react": "dev-master",
+        "react/socket-client": "~0.4",
+        "monolog/monolog": "~1.12",
+        "shuber/curl": "~1.0",
+	"atrox/async-mysql": "dev-master"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/kaja47/async-mysql"
+        }
+    ]
+}
