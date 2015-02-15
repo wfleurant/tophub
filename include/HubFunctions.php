@@ -18,7 +18,7 @@ class ColorCLI {
 		'cyan'         => '0;36', 'light_cyan'   => '1;36',
 		'red'          => '0;31', 'light_red'    => '1;31',
 		'purple'       => '0;35', 'light_purple' => '1;35',
-		'brown'        => '0;33', 'yellow'	 		 => '1;33',
+		'brown'        => '0;33', 'yellow'       => '1;33',
 		'light_gray'   => '0;37', 'white'        => '1;37',
 		);
 
@@ -59,6 +59,11 @@ class ColorCLI {
 	}
 }
 
+$banner = function($msg='') {
+	$hub = ColorCLI::getColoredString('[topHub]', 'red');
+	return ($msg === '') ? $hub . PHP_EOL
+			     : $hub .' '. ColorCLI::getColoredString($msg, 'white') . PHP_EOL;
+};
 
 function tophub_headers($tophub_revi='0.1')
 {
