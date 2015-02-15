@@ -44,7 +44,7 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
 
     $tophub_Response->writeHead(200, $tophub_meta['headers']);
 
-    $request->on('data',function($data) use ($request, $tophub_Response, &$reqbody, $http,
+    $request->on('data',function($data) use ($request, $tophub_Response, &$reqbody,
                                             &$recdata, $tophub_sums, $tophub_meta)
     {
         yell('string', 'Recieved Request((1))');
