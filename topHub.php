@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 
 /**
@@ -25,75 +26,123 @@ Yb,_    88                         Yb, `88       88              IP'`Yb
 require 'vendor/autoload.php';
 require 'include/HubEventLog.php';
 require 'include/HubFunctions.php';
+require 'include/HubMessaging.php';
 require 'include/db/HubMongo.php';
 require 'include/db/HubMySQL.php';
 
-$tophub_revi = '1.0';
-$tophub_port = 1617;
-$tophub_host = 'fccc:5b2c:2336:fd59:794d:c0fa:817d:8d8';
-$tophub_host = '127.0.0.1';
-$tophub_sums = 0;
+require 'include/HubConfig.php';
 
-$tophub_head = tophub_headers($tophub_revi);
-$tophub_meta = array();
-$tophub_meta['headers'] = $tophub_head;
-
-$loop = React\EventLoop\Factory::create();
+$loop   = React\EventLoop\Factory::create();
 $socket = new React\Socket\Server($loop);
-$http = new React\Http\Server($socket);
+$http   = new React\Http\Server($socket);
 
-$tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub_meta)
+$tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub_meta, $http)
 {
 
-	$tophub_sums++;
-    // print_r($request);
+    $tophub_sums++;
     $reqbody = '';
-    $clihead = $request->getHeaders();
-    if(!isset($clihead['Content-Length'])) {
-        yell('error', "Content Length is not an Indexable Item");
-        yell('array', $request);
-        // var_dump($request);
-        return(1);
-    } else {
-        $cliconnlen = (int)$clihead['Content-Length'];
-    }
 
-    $recdata = 0;
+    $tophub_Response->writeHead(200, $tophub_meta['headers']);
 
-    if($cliconnlen == 0) {
-        yell('verbose', "The client content length was zero (0)");
-        yell('array', $request);
-    }
-
-
-    $request->on('data',function($data) use ($request, $tophub_Response, &$reqbody, &$recdata, $cliconnlen,
-                                             $tophub_sums, $tophub_meta)
+    $request->on('data',function($data) use ($request, $tophub_Response, &$reqbody, $http,
+                                            &$recdata, $tophub_sums, $tophub_meta)
     {
+        yell('string', 'Recieved Request((1))');
 
-        $tophub_Response->writeHead(200, $tophub_meta['headers']);
-        $tophub_Response->end();
+        $tophub_method  = $request->getMethod();    /* POST, GET */
+        $tophub_query   = $request->getQuery();     /* POST, GET */
+        $tophub_path    = $request->getPath();      /* /v0/node.json */
+        $tophub_clihead = $request->getHeaders();   /* array */
+        $tophub_clileng = (isset($tophub_clihead['Content-Length']))
+                            ? (int)$tophub_clihead['Content-Length']
+                            : false;
 
-
-        yell('string',$data);
-        $reqbody .= $data;
-        $recdata += strlen($data);
-        if ($recdata >= $cliconnlen) {
-            parse_str($reqbody, $tophub_Array);
-
-            // code...
+        if ( $tophub_method == 'POST' && ($tophub_clileng === 0)) {
+            yell('error', "Content Length is not an Indexable Item: (0)");
+            yell('array', $data);
+            var_dump($data);
+            return(1);
         }
+
+        if ($tophub_method == 'GET') {
+            yell('string', "*!* TophubMethod Logic: $tophub_method");
+
+            if ($tophub_query) {
+                /*
+                | Method | Endpoint             | Args      | Description           |
+                | ------ | -------------------- | --------- | --------------------- |
+                | GET    | /v0/node/info.json   | n/a       | ...                   |
+                | GET    | /v0/node/peers.json  | n/a       | ...                   |
+                | GET    | /v0/node/update.json | n/a       | ...                   |
+                */
+                yell('string', "*!* GET with DATA");
+                yell('array', $tophub_query);
+            } else {
+
+                /*
+                | Method | Endpoint             | Args      | Description           |
+                | ------ | -------------------- | --------- | --------------------- |
+                | GET    | /v0/node/info.json   | ip=[addr] | Get basic information |
+                | GET    | /v0/node/peers.json  | ip=[addr] | Get node peers        |
+                | GET    | /v0/node/update.json | ip=[addr] | ??????????????        |
+                */
+                if ($tophub_path == '/v0/node/info.json') {
+                    echo 'tophub_path' . $tophub_path;
+                    print_r($tophub_query);
+                }
+                if ($tophub_path == '/v0/node/peers.json') {
+                    echo 'tophub_path' . $tophub_path;
+                    print_r($tophub_query);
+                }
+                if ($tophub_path == '/v0/node/update.json') {
+                    echo 'tophub_path' . $tophub_path;
+                    print_r($tophub_query);
+                }
+
+            }
+
+        }
+        elseif ($tophub_method == 'POST') {
+            /*
+            | Method | Endpoint             | Args       | Description           |
+            | ------ | -------------------- | ---------- | --------------------- |
+            | POST   | /v0/node/info.json   | ip=[addr]  | ????????????????????? |
+            | POST   | /v0/node/peers.json  | ip=[addr]  | ????????????????????? |
+            | POST   | /v0/node/update.json | info=array | Update your node info |
+            */
+            yell('string', "*!* TophubMethod Logic: $tophub_method");
+
+            if (isset($tophub_clihead['Expect'])) {
+
+                yell('string', "Chunked  Expect: \t" . $tophub_clihead['Expect']);
+                /* @TODO See if we can force a HTTP 1.0 Only response... */
+                // $tophub_Response->writeContinue();
+                $tophub_Response->end(); // bail..
+            }
+
+            $recdata = 0;
+
+            $reqbody .= $data;
+            $recdata += strlen($data);
+
+            if ($recdata >= $tophub_clileng) {
+                parse_str($reqbody, $tophub_Array);
+                yell('string', 'tophub_Array:');
+                print_r($tophub_Array);
+            }
+        }
+        echo PHP_EOL;
+
+        $tophub_Response->end();
     });
 };
 
-// This is the main event of the evening
+echo $banner("Version " . $tophub_revi);
+echo $banner("Binding to http://" . $tophub_host .':'. $tophub_port);
+
 $http->on('request', $tophub_Obj);
-
-// This is the moment you've all been waiting for
+// $http->on('get', $tophub_Obj);
 $socket->listen($tophub_port, $tophub_host);
-
-// Let's get ready to rumble!
 $loop->run();
-
-?>
 
 ?>
