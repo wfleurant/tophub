@@ -13,12 +13,6 @@
         "react/socket-client": "~0.4",
         "monolog/monolog": "~1.12",
         "shuber/curl": "~1.0",
-	"atrox/async-mysql": "dev-master"
-    },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/kaja47/async-mysql"
-        }
-    ]
+	"react/mysql": "0.2.*"
+    }
 }
