@@ -19,3 +19,13 @@ Yb,_    88                         Yb, `88       88              IP'`Yb
                        I8
                        I8
 ```
+
+### TopHub suggests installing Event loop support
+* react/event-loop
+  * ext-libevent (>=0.1.0)
+  * ext-event (~1.0)
+  * ext-libev (*)
+* react/react
+  * ext-libevent
+  * ext-libev
+  * ext-event
