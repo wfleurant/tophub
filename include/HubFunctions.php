@@ -79,6 +79,21 @@ function tophub_headers($tophub_revi='0.1')
 	);
 }
 
-
-
+$post_sanity = function($tophub_method, $tophub_clileng, $tophub_clihead) {
+	if ( $tophub_method == 'POST' ) {
+		if ($tophub_clileng === 0) {
+			yell('error', "Content Length is not an Indexable Item: (0)");
+			return(false);
+		}  else if (isset($tophub_clihead['Expect'])) {
+			yell('error', "Unsupported: Chunked Expect: \t" . $tophub_clihead['Expect']);
+			/* @TODO See if we can force a HTTP 1.0 Only response... */
+			/* $tophub_Response->writeContinue(); */
+			return(false);
+		} else {
+			return(true);
+		}
+	} else {
+		return(true);
+	}
+}
 ?>
