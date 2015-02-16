@@ -36,7 +36,7 @@ $loop   = React\EventLoop\Factory::create();
 $socket = new React\Socket\Server($loop);
 $http   = new React\Http\Server($socket);
 
-$tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub_meta, $http)
+$tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub_meta, $http, $post_sanity)
 {
 
     $tophub_sums++;
@@ -45,9 +45,10 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
     $tophub_Response->writeHead(200, $tophub_meta['headers']);
 
     $request->on('data',function($data) use ($request, $tophub_Response, &$reqbody,
-                                            &$recdata, $tophub_sums, $tophub_meta)
+                                            &$recdata, $tophub_sums, $tophub_meta, $post_sanity)
     {
         yell('string', 'Recieved Request((1))');
+        // print_r($data);
 
         $tophub_method  = $request->getMethod();    /* POST, GET */
         $tophub_query   = $request->getQuery();     /* POST, GET */
@@ -57,11 +58,9 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
                             ? (int)$tophub_clihead['Content-Length']
                             : false;
 
-        if ( $tophub_method == 'POST' && ($tophub_clileng === 0)) {
-            yell('error', "Content Length is not an Indexable Item: (0)");
-            yell('array', $data);
-            var_dump($data);
-            return(1);
+        if ($post_sanity($tophub_method, $tophub_clileng, $tophub_clihead) === false) {
+            $tophub_Response->end(); // bail..
+            return;
         }
 
         if ($tophub_method == 'GET') {
@@ -112,13 +111,6 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
             */
             yell('string', "*!* TophubMethod Logic: $tophub_method");
 
-            if (isset($tophub_clihead['Expect'])) {
-
-                yell('string', "Chunked  Expect: \t" . $tophub_clihead['Expect']);
-                /* @TODO See if we can force a HTTP 1.0 Only response... */
-                // $tophub_Response->writeContinue();
-                $tophub_Response->end(); // bail..
-            }
 
             $recdata = 0;
 
