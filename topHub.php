@@ -18,7 +18,7 @@ Yb,_    88                         Yb, `88       88              IP'`Yb
                        I8
                        I8
                        I8        Top of the Hub
-				 End point @ Hub.Hyperboria -wfleurant
+                                End point @ Hub.Hyperboria -wfleurant
 */
 
 require 'vendor/autoload.php';
@@ -44,8 +44,8 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
                                             &$recdata, $tophub_sums, $tophub_meta, $post_sanity)
     {
         yell('string', 'Recieved Request((1))');
-        // print_r($data);
 
+        include 'include/db/HubMySQL.php';
         $tophub_method  = $request->getMethod();    /* POST, GET */
         $tophub_query   = $request->getQuery();     /* POST, GET */
         $tophub_path    = $request->getPath();      /* /v0/node.json */
@@ -55,9 +55,9 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
                             : false;
 
         if ($post_sanity($tophub_method, $tophub_clileng, $tophub_clihead) === false) {
-            $tophub_Response->end(); // bail..
-            return;
+            $tophub_Response->end(); return;
         }
+
 
         if ($tophub_method == 'GET') {
             yell('string', "*!* TophubMethod Logic: $tophub_method");
@@ -70,43 +70,26 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
                 | GET    | /v0/node/peers.json  | ip=[addr] | Get node peers        |
                 */
 
-                include 'include/db/HubMySQL.php';
                 yell('string', "*!* GET with DATA"); yell('array', $tophub_query);
 
-                $ip = (isset($tophub_query['ip'])) ? $tophub_query['ip'] : '';
+                $addr = (isset($tophub_query['ip'])) ? $tophub_query['ip'] : '';
 
                 if ($tophub_path == '/v0/node/info.json') {
 
-                    $query = new React\MySQL\Query('select * from nodes where addr = ?');
-                    $sql   = $query->bindParams($ip)->getSql();
+                    $query = new React\MySQL\Query('SELECT * FROM nodes WHERE addr = ?');
+                    $sql   = $query->bindParams($addr)->getSql();
 
                 } else if ($tophub_path == '/v0/node/peers.json') {
 
-                    $query = new React\MySQL\Query('select * from nodes where addr = ?');
-                    $sql   = $query->bindParams($ip)->getSql();
-
-                } else if ($tophub_path == '/v0/node/update.json') {
-
-                    $query = new React\MySQL\Query('select * from nodes where addr = ?');
-                    $sql   = $query->bindParams($ip)->getSql();
+                    $query = new React\MySQL\Query('SELECT * FROM nodes WHERE addr = ?');
+                    $sql   = $query->bindParams($addr)->getSql();
 
                 } else {
+
                     $tophub_Response->write(json_encode((object) array(), JSON_PRETTY_PRINT));
-                }
-
-                $connection->connect(function () {});
-                $connection->query($sql, function ($command, $conn) use ($loop_mysql, $tophub_query, $tophub_Response) {
-                    if ($command->hasError()) {
-                        yell('string', 'Error: Database');
-                        $tophub_Response->write(json_encode(array('error'=>'database'), JSON_PRETTY_PRINT));
-                    } else {
-                        $results = $command->resultRows;
-                        $tophub_Response->write(json_encode((object) $results, JSON_PRETTY_PRINT));
-                    }
                     $loop_mysql->stop();
-                });
-                $loop_mysql->run();
 
+                }
             } else {
                 /*
                 | Method | Endpoint             | Args      | Description           |
@@ -125,7 +108,6 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
 
                 }
             }
-
         }
         elseif ($tophub_method == 'POST') {
             /*
@@ -139,13 +121,63 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
             $recdata += strlen($data);
 
             if ($recdata >= $tophub_clileng) {
+
                 parse_str($reqbody, $tophub_Array);
                 yell('string', 'tophub_Array:');
-                print_r($tophub_Array);
+
+                $addr = (isset($tophub_Array['ip'])) ? $tophub_Array['ip'] : '';
+                $ownername = (isset($tophub_Array['ownername'])) ? $tophub_Array['ownername'] : '';
+                if ($tophub_path == '/v0/node/update.json') {
+                    /*
+                        UPDATE nodes SET cjdns_protocol = ? WHERE addr = ?;
+                        UPDATE nodes SET api_enabled = ?  WHERE addr = ?;
+                        UPDATE nodes SET api_keyid = ?, api_secretkey = ? WHERE addr = ?;
+                        UPDATE nodes SET country = ? WHERE addr = ?;
+                        UPDATE nodes SET hostname = ? WHERE addr = ?
+                        UPDATE nodes SET last_seen = ? WHERE addr = ?;
+                        UPDATE nodes SET lat = ? WHERE addr = ?;
+                        UPDATE nodes SET lng = ? WHERE addr = ?;
+                        UPDATE nodes SET map_privacy = ?  WHERE addr = ?;
+                        UPDATE nodes SET msg_enabled = ? WHERE addr = ?;
+                        UPDATE nodes SET msg_privacy = ?  WHERE addr = ?;
+                        UPDATE nodes SET ownername = ? WHERE addr = ?;
+                        UPDATE nodes SET public_key = ? WHERE addr = ?;
+                    */
+
+                    $query = new React\MySQL\Query('UPDATE nodes SET ownername = ? WHERE addr = ?');
+                    $sql   = $query->bindParams($ownername, $addr)->getSql();
+
+                } else {
+                    $tophub_Response->write(json_encode((object) array(), JSON_PRETTY_PRINT));
+                    $loop_mysql->stop();
+                }
             }
         }
-        echo PHP_EOL;
-        $tophub_Response->end();
+        /****************************************************************************************************/
+
+        if ((!isset($sql) || $sql=='')) {
+            $tophub_Response->write(json_encode(array('error'=>'database'), JSON_PRETTY_PRINT));
+            $tophub_Response->end();
+        } else {
+            $connection->connect(function () {});
+            $connection->query($sql, function ($command, $conn) use ($loop_mysql, $tophub_query, $tophub_Response, $tophub_method) {
+                if ($command->hasError()) {
+                    yell('string', 'Error: Database');
+                    $tophub_Response->write(json_encode(array('error'=>'database'), JSON_PRETTY_PRINT));
+                } else {
+                    if ($tophub_method == "GET") {
+                        $results = $command->resultRows;
+                    } elseif ($tophub_method == "POST") {
+                        $results = $command;
+                    }
+                    $tophub_Response->write(json_encode((object) $results, JSON_PRETTY_PRINT));
+                }
+                $loop_mysql->stop();
+            });
+            $loop_mysql->run();
+            $tophub_Response->end();
+            echo PHP_EOL;
+        }
     });
 };
 
