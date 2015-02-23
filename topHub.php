@@ -21,15 +21,11 @@ Yb,_    88                         Yb, `88       88              IP'`Yb
 				 End point @ Hub.Hyperboria -wfleurant
 */
 
-
-
 require 'vendor/autoload.php';
 require 'include/HubEventLog.php';
 require 'include/HubFunctions.php';
 require 'include/HubMessaging.php';
 require 'include/db/HubMongo.php';
-require 'include/db/HubMySQL.php';
-
 require 'include/HubConfig.php';
 
 $loop   = React\EventLoop\Factory::create();
@@ -70,34 +66,64 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
                 /*
                 | Method | Endpoint             | Args      | Description           |
                 | ------ | -------------------- | --------- | --------------------- |
-                | GET    | /v0/node/info.json   | n/a       | ...                   |
-                | GET    | /v0/node/peers.json  | n/a       | ...                   |
-                | GET    | /v0/node/update.json | n/a       | ...                   |
+                | GET    | /v0/node/info.json   | ip=[addr] | Get basic information |
+                | GET    | /v0/node/peers.json  | ip=[addr] | Get node peers        |
                 */
-                yell('string', "*!* GET with DATA");
-                yell('array', $tophub_query);
-            } else {
 
+                include 'include/db/HubMySQL.php';
+                yell('string', "*!* GET with DATA"); yell('array', $tophub_query);
+
+                $ip = (isset($tophub_query['ip'])) ? $tophub_query['ip'] : '';
+
+                if ($tophub_path == '/v0/node/info.json') {
+
+                    $query = new React\MySQL\Query('select * from nodes where addr = ?');
+                    $sql   = $query->bindParams($ip)->getSql();
+
+                } else if ($tophub_path == '/v0/node/peers.json') {
+
+                    $query = new React\MySQL\Query('select * from nodes where addr = ?');
+                    $sql   = $query->bindParams($ip)->getSql();
+
+                } else if ($tophub_path == '/v0/node/update.json') {
+
+                    $query = new React\MySQL\Query('select * from nodes where addr = ?');
+                    $sql   = $query->bindParams($ip)->getSql();
+
+                } else {
+                    $tophub_Response->write(json_encode((object) array(), JSON_PRETTY_PRINT));
+                }
+
+                $connection->connect(function () {});
+                $connection->query($sql, function ($command, $conn) use ($loop_mysql, $tophub_query, $tophub_Response) {
+                    if ($command->hasError()) {
+                        yell('string', 'Error: Database');
+                        $tophub_Response->write(json_encode(array('error'=>'database'), JSON_PRETTY_PRINT));
+                    } else {
+                        $results = $command->resultRows;
+                        $tophub_Response->write(json_encode((object) $results, JSON_PRETTY_PRINT));
+                    }
+                    $loop_mysql->stop();
+                });
+                $loop_mysql->run();
+
+            } else {
                 /*
                 | Method | Endpoint             | Args      | Description           |
                 | ------ | -------------------- | --------- | --------------------- |
-                | GET    | /v0/node/info.json   | ip=[addr] | Get basic information |
-                | GET    | /v0/node/peers.json  | ip=[addr] | Get node peers        |
-                | GET    | /v0/node/update.json | ip=[addr] | ??????????????        |
+                | GET    | /v0/node/info.json   | n/a       | ? return valid params |
+                | GET    | /v0/node/peers.json  | n/a       | ? list all peers      |
+                | GET    | /v0/node/update.json | n/a       | ? return valid params |
                 */
-                if ($tophub_path == '/v0/node/info.json') {
-                    echo 'tophub_path' . $tophub_path;
+                if (($tophub_path == '/v0/node/info.json')
+                ||  ($tophub_path == '/v0/node/peers.json')
+                ||  ($tophub_path == '/v0/node/update.json')
+                ){
+                    yell('string', 'tophub_path ' . $tophub_path);
                     print_r($tophub_query);
-                }
-                if ($tophub_path == '/v0/node/peers.json') {
-                    echo 'tophub_path' . $tophub_path;
-                    print_r($tophub_query);
-                }
-                if ($tophub_path == '/v0/node/update.json') {
-                    echo 'tophub_path' . $tophub_path;
-                    print_r($tophub_query);
-                }
+                    $tophub_Response->write(json_encode((object) array(), JSON_PRETTY_PRINT));
 
+                }
             }
 
         }
@@ -105,15 +131,10 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
             /*
             | Method | Endpoint             | Args       | Description           |
             | ------ | -------------------- | ---------- | --------------------- |
-            | POST   | /v0/node/info.json   | ip=[addr]  | ????????????????????? |
-            | POST   | /v0/node/peers.json  | ip=[addr]  | ????????????????????? |
             | POST   | /v0/node/update.json | info=array | Update your node info |
             */
             yell('string', "*!* TophubMethod Logic: $tophub_method");
-
-
             $recdata = 0;
-
             $reqbody .= $data;
             $recdata += strlen($data);
 
@@ -124,7 +145,6 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
             }
         }
         echo PHP_EOL;
-
         $tophub_Response->end();
     });
 };
@@ -133,7 +153,6 @@ echo $banner("Version " . $tophub_revi);
 echo $banner("Binding to http://" . $tophub_host .':'. $tophub_port);
 
 $http->on('request', $tophub_Obj);
-// $http->on('get', $tophub_Obj);
 $socket->listen($tophub_port, $tophub_host);
 $loop->run();
 
