@@ -111,12 +111,13 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
         }
         elseif ($tophub_method == 'POST') {
             /*
-            | Method | Endpoint             | Args       | Description           |
-            | ------ | -------------------- | ---------- | --------------------- |
-            | POST   | /v0/node/update.json | info=array | Update your node info |
+            | Method | Endpoint             | Args            | Description           |
+            | ------ | -------------------- | --------------- | --------------------- |
+            | POST   | /v0/node/update.json | info=array      | Update your node info |
+            | POST   | /v0/node/update.json | peerstats=array | Update your node info |
             */
             yell('string', "*!* TophubMethod Logic: $tophub_method");
-            $recdata = 0;
+            $recdata  = 0;
             $reqbody .= $data;
             $recdata += strlen($data);
 
@@ -124,28 +125,52 @@ $tophub_Obj = function ($request, $tophub_Response) use (&$tophub_sums, &$tophub
 
                 parse_str($reqbody, $tophub_Array);
                 yell('string', 'tophub_Array:');
+                // print_r(json_decode($reqbody));
+                // var_dump($tophub_Array);
 
                 $addr = (isset($tophub_Array['ip'])) ? $tophub_Array['ip'] : '';
                 $ownername = (isset($tophub_Array['ownername'])) ? $tophub_Array['ownername'] : '';
+                // $peerstats = (isset($reqbody['peerstats'])) ? $reqbody : '';
                 if ($tophub_path == '/v0/node/update.json') {
-                    /*
-                        UPDATE nodes SET cjdns_protocol = ? WHERE addr = ?;
-                        UPDATE nodes SET api_enabled = ?  WHERE addr = ?;
-                        UPDATE nodes SET api_keyid = ?, api_secretkey = ? WHERE addr = ?;
-                        UPDATE nodes SET country = ? WHERE addr = ?;
-                        UPDATE nodes SET hostname = ? WHERE addr = ?
-                        UPDATE nodes SET last_seen = ? WHERE addr = ?;
-                        UPDATE nodes SET lat = ? WHERE addr = ?;
-                        UPDATE nodes SET lng = ? WHERE addr = ?;
-                        UPDATE nodes SET map_privacy = ?  WHERE addr = ?;
-                        UPDATE nodes SET msg_enabled = ? WHERE addr = ?;
-                        UPDATE nodes SET msg_privacy = ?  WHERE addr = ?;
-                        UPDATE nodes SET ownername = ? WHERE addr = ?;
-                        UPDATE nodes SET public_key = ? WHERE addr = ?;
-                    */
+                    if(is_object(json_decode($reqbody))) {
+                        if(is_array(json_decode($reqbody)->peerstats)) {
+                            $tophub_Response->write(json_encode((object) array('update' => 'accepted'), JSON_PRETTY_PRINT));
+                            $peerstats_from = json_decode($reqbody)->ip;
+                            $peerstats = json_decode($reqbody)->peerstats;
+                            yell('string', 'Recieved ' . count($peerstats) . ' peerStats from: ' . $peerstats_from);
+                            /* Send to database */
 
-                    $query = new React\MySQL\Query('UPDATE nodes SET ownername = ? WHERE addr = ?');
-                    $sql   = $query->bindParams($ownername, $addr)->getSql();
+                            /*  [4] => stdClass Object
+                                    (
+                                        [version] => v15
+                                        [label] => 0000.0000.0000.0013
+                                        [pubkey] => xrj4g8klznc6ju2q1ljktlhff08c24lglmyqwtddtjy3vlsgrwq0.k
+                                        [state] => ESTABLISHED
+                                        [bytesin] => 25055604
+                                        [bytesout] => 20660416
+                                    ) */
+                        }
+                    } else { // if array?
+
+                        /*
+                            UPDATE nodes SET cjdns_protocol = ? WHERE addr = ?;
+                            UPDATE nodes SET api_enabled = ?  WHERE addr = ?;
+                            UPDATE nodes SET api_keyid = ?, api_secretkey = ? WHERE addr = ?;
+                            UPDATE nodes SET country = ? WHERE addr = ?;
+                            UPDATE nodes SET hostname = ? WHERE addr = ?
+                            UPDATE nodes SET last_seen = ? WHERE addr = ?;
+                            UPDATE nodes SET lat = ? WHERE addr = ?;
+                            UPDATE nodes SET lng = ? WHERE addr = ?;
+                            UPDATE nodes SET map_privacy = ?  WHERE addr = ?;
+                            UPDATE nodes SET msg_enabled = ? WHERE addr = ?;
+                            UPDATE nodes SET msg_privacy = ?  WHERE addr = ?;
+                            UPDATE nodes SET ownername = ? WHERE addr = ?;
+                            UPDATE nodes SET public_key = ? WHERE addr = ?;
+                        */
+
+                        $query = new React\MySQL\Query('UPDATE nodes SET ownername = ? WHERE addr = ?');
+                        $sql   = $query->bindParams($ownername, $addr)->getSql();
+                    }
 
                 } else {
                     $tophub_Response->write(json_encode((object) array(), JSON_PRETTY_PRINT));
