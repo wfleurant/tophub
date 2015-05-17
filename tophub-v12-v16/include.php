@@ -1,4 +1,33 @@
 <?php
+// HubConfig.php
+$tophub_revi = '1.0';
+$tophub_port = 1617;
+$tophub_host = 'fccc:5b2c:2336:fd59:794d:c0fa:817d:8d8';
+$tophub_host = '127.0.0.1';
+$tophub_host = 'fc00::1';
+$tophub_sums = 0;
+
+$tophub_head = tophub_headers($tophub_revi);
+$tophub_meta = array();
+$tophub_meta['headers'] = $tophub_head;
+$tophub_meta['Server'] = $tophub_head;
+
+// HubEventLog.php
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
+function yell($type=false,$string=false,$bulletlist=null)
+{
+    if((is_array($string)) || is_object($string)){
+        print_r($string);
+        return;
+    } else {
+        echo ColorCLI::getColoredString($string, 'white');
+        print("\n");
+    }
+}
+
+// HubFunctions.php
 /*
 	Simple CLI color class -> https://gist.github.com/donatj/1315354
 
