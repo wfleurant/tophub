@@ -9,16 +9,14 @@ use App\Tophub\Peerstats;
 class PeerstatsController extends Controller {
 
 	/**
-	 * Update the specified resource in storage.
-	 *
-	 * @param  int  $id
-	 * @return Response
+	 * Update
 	 */
 	public function update($req = 'req')
 	{
         $ps = new Peerstats(Input::ip());
         $ps->peerstats = Input::json()->get('peerstats');
-        $result = $ps->PeersUpdate();
+        // $result = $ps->PeersUpdate();
+        $result = $ps->tophub();
 
 		return(json_encode(['result' => $result ]));
 	}
