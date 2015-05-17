@@ -1,4 +1,4 @@
-<?php namespace App;
+<?php namespace App\Tophub;
 
 use Jenssegers\Mongodb\Model as Eloquent;
 use Moloquent;

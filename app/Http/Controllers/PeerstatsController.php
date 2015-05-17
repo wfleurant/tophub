@@ -4,7 +4,7 @@ use Input;
 use Log;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
-use App\Peerstats;
+use App\Tophub\Peerstats;
 
 class PeerstatsController extends Controller {
 
