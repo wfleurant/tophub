@@ -81,6 +81,7 @@ return [
 		'App\Providers\RouteServiceProvider',
 		'Orangehill\Iseed\IseedServiceProvider',
 		'Jenssegers\Mongodb\MongodbServiceProvider',
+		'LaravelReactPHP\Providers\ReactCommandProvider',
 	],
 
 	/*
