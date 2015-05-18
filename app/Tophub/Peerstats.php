@@ -72,14 +72,6 @@ class Peerstats extends Moloquent {
 			$reqbody = '';
 
 			/***********************************************************************/
-			/* Back peddling code where Laravel ReactPHP hands off */
-
-			// $tophub_Response->writeHead(200, $tophub_meta['headers']);
-			// $request->on('data',function($data) {
-
-			$this->yell('string', 'Recieved Request((1))');
-
-			/***********************************************************************/
 			// $tophub_method  = $request->getMethod();    /* POST, GET */
 			// $tophub_query   = $request->getQuery();     /* POST, GET */
 			// $tophub_path    = $request->getPath();      /* /v0/node.json */
@@ -94,19 +86,9 @@ class Peerstats extends Moloquent {
 			*/
 
 			$tophub_method  = Request::getMethod();    /* POST, GET */
-			$this->yell('string', "*!* TophubMethod Logic: $tophub_method");
-			return json_encode($LogInfo);
-			$recdata  = 0;
-			$reqbody .= $data;
-			$recdata += strlen($data);
+			// $this->yell('string', "*!* TophubMethod Logic: $tophub_method");
 
-			parse_str($reqbody, $tophub_Array);
-			$this->yell('string', 'tophub_Array:');
-
-			/* '/v0/node/update.json' */
-
-			$tophub_Response->write(json_encode((object) array('update' => 'accepted'), JSON_PRETTY_PRINT));
-			$this->yell('string', 'Recieved ' . count($peerstats) . ' peerStats from: ' . $peerstats_from);
+			$this->yell('string', 'Recieved ' . count($this->peerstats) . ' peerStats from:  $peerstats_from');
 
 			/*
 				[version] => v15
@@ -117,31 +99,35 @@ class Peerstats extends Moloquent {
 				[bytesout] => 20660416
 			*/
 
-			/* Async MySQL */
-
-			/*
-			$query = new React\MySQL\Query('UPDATE nodes SET ownername = ? WHERE addr = ?');
-			$sql   = $query->bindParams($ownername, $addr)->getSql();
-
-			$connection->connect(function(){});
-			$connection->query($sql, function ($command, $conn)
-				use ($loop_mysql, $tophub_query, $tophub_Response, $tophub_method)
-			{
-				$loop_mysql->stop();
-			});
-
-			$loop_mysql->run();
-			$tophub_Response->end();
-			*/
+			return (object) [ 'update' => 'accepted' ];
 
 		};
 
 		/* Nuke it */
-		$tophub_Obj();
+		return $tophub_Obj();
 
 	}
 
+	public function sqlHandoff ($data)
+	{
+		/* Async MySQL */
 
+		/*
+		$query = new React\MySQL\Query('UPDATE nodes SET ownername = ? WHERE addr = ?');
+		$sql   = $query->bindParams($ownername, $addr)->getSql();
+
+		$connection->connect(function(){});
+		$connection->query($sql, function ($command, $conn)
+			use ($loop_mysql, $tophub_query, $tophub_Response, $tophub_method)
+		{
+			$loop_mysql->stop();
+		});
+
+		$loop_mysql->run();
+		$tophub_Response->end();
+		*/
+		return true;
+	}
 
 	public function yell($type=false,$string=false,$bulletlist=null) {
 
