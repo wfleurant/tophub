@@ -12,73 +12,74 @@ class Peerstats extends Moloquent {
 	protected $collection = 'peerstats';
 	protected $connection = 'mongo';
 
-	function __construct($node = null) {
-		$this->node = $node;
+	function __construct($ipaddr=null, $peerstats=null,
+								$c=null, $d=null, $e=null, $f=null) {
 
+		/* sanity required on
+			$ipaddr
+			$peerstats
+		*/
+		$this->ipaddr=$ipaddr;
+		$this->peerstats=$peerstats;
+			$this->c=$c;
+			$this->d=$d;
+			$this->e=$e;
+			$this->f=$f;
 		// tophub
 		$this->log = new Logger('Peerstats');
 		$this->log->pushHandler(new StreamHandler('Peerstats.log', Logger::NOTICE));
 
 		// HubConfig.php
-		$tophub_revi = '1.0';
-		$tophub_port = 1617;
-		$tophub_host = 'fccc:5b2c:2336:fd59:794d:c0fa:817d:8d8';
-		$tophub_host = '127.0.0.1';
-		$tophub_host = 'fc00::1';
-		$tophub_sums = 0;
+		$this->tophub_revi = '1.0';
+		$this->tophub_host = 'fc00::1';
+		$this->tophub_sums = 0;
 
-		$tophub_head = tophub_headers($tophub_revi);
-		$tophub_meta = array();
-		$tophub_meta['headers'] = $tophub_head;
-		$tophub_meta['Server'] = $tophub_head;
+		// HubConfig.php
+		$this->tophub_head = [
+				'Content-Type'  => 'text/html; charset=UTF-8',
+			    'Date'          => 'Sun, 01 Jan 2015 00:00:00 GMT',
+			    'Server'        => 'tophub/' . $this->tophub_revi,
+			    'X-Powered-By'  => 'PHP/' . phpversion(),
+			    'Cache-Control' => 'no-cache, no-store, must-revalidate',
+			    'Pragma'        => 'no-cache',
+			    'Expires'       => 'Sat, 21 Apr 2001 00:00:00 EST',
+			    'Connection'    => 'Close'
+			];
 
-	}
+	} // __construct
 
-	public function PeersUpdate() {
-		return(json_encode(['result'=>false]));
-		/* Logging */
-		$LogInfo = [ "ip" => Input::ip(), "peerstats" => count($this->peerstats) ];
-		$log = new Logger('Peerstats');
-		$log->pushHandler(new StreamHandler('Peerstats.log', Logger::NOTICE));
-
-		$log->addNotice('PeersUpdate()', $LogInfo);
-
-		Log::useFiles('php://stdout', 'info');
-		Log::info(json_encode($LogInfo));
-
-		/* DB Update */
-		$Cfg = $this;
-		$Cfg->save();
-		return($Cfg);
-
-	}
 	public function tophub() {
 
-		$LogInfo = [ "ip" => Input::ip(), "peerstats" => count($this->peerstats) ];
-		// $this->log->addNotice('PeersUpdate()', $LogInfo);
-		// return json_encode($LogInfo);
+		/* Log */
+		$LogInfo = [ "client-id" => $this->ipaddr, "total-peerstats" => count($this->peerstats) ];
 
+		$thMetaHeader['tophub_revi'] = $this->tophub_revi;
+		$thMetaHeader['tophub_host'] = $this->tophub_host;
+		$thMetaHeader['tophub_sums'] = $this->tophub_sums;
+		$thMetaHeader['tophub_head'] = $this->tophub_head;
 
-			// use (&$tophub_sums, &$tophub_meta, $http, $post_sanity)
+		// $this->log->addNotice('ipaddr', [ $this->ipaddr ]);
+		// $this->log->addNotice('peerstats',  $this->peerstats );
+		$this->log->addNotice('LogInfo()', $LogInfo);
 
-
-		$tophub_Obj = function ($request='foo', $tophub_Response='bar')
-			use ($LogInfo)
+		/* Tophub */
+		$tophub_Obj = function ($request='foo', $tophub_Response='bar') use ($LogInfo)
 		{
-			$LogInfo['React'] = true;
-			$this->log->addNotice('PeersUpdate()', $LogInfo);
-			return json_encode($LogInfo);
+
+
+
 			/***********************************************************************/
+			$tophub_sums = 0;
 			$tophub_sums++;
 			$reqbody = '';
 
-			$tophub_Response->writeHead(200, $tophub_meta['headers']);
+			return json_encode($LogInfo);
+			/* Back peddling code where Laravel ReactPHP hands off */
 
-			$request->on('data',function($data) use ($request, $tophub_Response, &$reqbody,
-													&$recdata, $tophub_sums, $tophub_meta, $post_sanity)
-			{
+			// $tophub_Response->writeHead(200, $tophub_meta['headers']);
+			// $request->on('data',function($data) {
+
 				yell('string', 'Recieved Request((1))');
-
 				include 'include/db/HubMySQL.php';
 				$tophub_method  = $request->getMethod();    /* POST, GET */
 				$tophub_query   = $request->getQuery();     /* POST, GET */
@@ -237,10 +238,8 @@ class Peerstats extends Moloquent {
 					$tophub_Response->end();
 					echo PHP_EOL;
 				}
-			});
 		};
 
-		/*******************/
 		/* Nuke it */
 		$tophub_Obj();
 
@@ -333,18 +332,3 @@ $banner = function($msg='') {
 	return ($msg === '') ? $hub . PHP_EOL
 			     : $hub .' '. ColorCLI::getColoredString($msg, 'white') . PHP_EOL;
 };
-
-
-function tophub_headers($tophub_revi='0.1')
-{
-	return array(
-	    'Content-Type'  => 'text/html; charset=UTF-8',
-	    'Date'          => 'Sun, 01 Jan 2015 00:00:00 GMT',
-	    'Server'        => 'tophub/' . $tophub_revi,
-	    'X-Powered-By'  => 'PHP/' . phpversion(),
-	    'Cache-Control' => 'no-cache, no-store, must-revalidate',
-	    'Pragma'        => 'no-cache',
-	    'Expires'       => 'Sat, 21 Apr 2001 00:00:00 EST',
-	    'Connection'    => 'Close'
-	);
-}

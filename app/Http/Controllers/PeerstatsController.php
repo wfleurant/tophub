@@ -13,12 +13,17 @@ class PeerstatsController extends Controller {
 	 */
 	public function update($req = 'req')
 	{
-        $ps = new Peerstats(Input::ip());
-        $ps->peerstats = Input::json()->get('peerstats');
-        // $result = $ps->PeersUpdate();
-        $result = $ps->tophub();
 
-		return(json_encode(['result' => $result ]));
+		/* vars */
+        $ipaddr    = Input::ip();
+        $peerstats = Input::json()->get('peerstats');
+
+        /* Peerstats  */
+        $pStats = new Peerstats($ipaddr, $peerstats);
+        $result = $pStats->tophub();
+        $return = json_encode(['result' => $result ]);
+
+        return $return;
 	}
 
 }
