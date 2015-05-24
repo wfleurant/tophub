@@ -8,22 +8,41 @@ use App\Tophub\Peerstats;
 
 class PeerstatsController extends Controller {
 
+
+	protected $rejected_resp = ['result' => 'rejected' ];
+
 	/**
-	 * Update
+	 * PeerStats Update
 	 */
-	public function update($req = 'req')
+	public function peerstats_post($req = 'req')
 	{
 
-		/* vars */
-        $ipaddr    = Input::ip();
-        $peerstats = Input::json()->get('peerstats');
+        /* Peerstats:: */
+        $pStats = new Peerstats(Input::ip(), Input::json()->get('peerstats'));
 
-        /* Peerstats  */
-        $pStats = new Peerstats($ipaddr, $peerstats);
-        $result = $pStats->tophub();
-        $return = json_encode(['result' => $result ]);
+		/* Sanity */
+		if ($pStats->insane === true) {
+			$pStats->yell('string', 'rejected: null or !array peerStats from: ' . Input::ip());
+			return json_encode($this->rejected_resp);
+		}
 
-        return $return;
+        /* ... */
+        $result = $pStats->tophub_peerstats();
+
+        /* ... */
+		$psc = count($pStats->peerstats);
+		$psf = $pStats->ipaddr;
+		$psr = $result->update;
+
+		$pStats->yell('string', $psr . ': ' . $psc . ' peerStats from: ' .  $psf);
+
+        if ($result->update == 'acceptable') {
+			// ::: acceptable :::
+		} elseif ($result->update == 'rejected') {
+			// ::: rejected :::
+		}
+
+		return json_encode(['result' => $result->update ]);
 	}
 
 }

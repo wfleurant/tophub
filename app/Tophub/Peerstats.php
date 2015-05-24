@@ -16,17 +16,18 @@ class Peerstats extends Moloquent {
 	function __construct($ipaddr=null, $peerstats=null,
 								$c=null, $d=null, $e=null, $f=null) {
 
-		/* sanity required on
-			$ipaddr
-			$peerstats
-		*/
 		$this->ipaddr=$ipaddr;
 		$this->peerstats=$peerstats;
-			$this->c=$c;
-			$this->d=$d;
-			$this->e=$e;
-			$this->f=$f;
-		// tophub
+
+		$this->c=$c; $this->d=$d; $this->e=$e; $this->f=$f;
+
+		// Thanks for playing...
+		if (!is_array($this->Peerstats)) {
+			$this->insane = true;
+			return;
+		}
+
+		// Log and Continue
 		$this->log = new Logger('Peerstats');
 		$this->log->pushHandler(new StreamHandler('Peerstats.log', Logger::NOTICE));
 
@@ -34,22 +35,25 @@ class Peerstats extends Moloquent {
 		$this->tophub_revi = '1.0';
 		$this->tophub_host = 'fc00::1';
 		$this->tophub_sums = 0;
-
-		// HubConfig.php
 		$this->tophub_head = [
-				'Content-Type'  => 'text/html; charset=UTF-8',
-			    'Date'          => 'Sun, 01 Jan 2015 00:00:00 GMT',
-			    'Server'        => 'tophub/' . $this->tophub_revi,
-			    'X-Powered-By'  => 'PHP/' . phpversion(),
-			    'Cache-Control' => 'no-cache, no-store, must-revalidate',
-			    'Pragma'        => 'no-cache',
-			    'Expires'       => 'Sat, 21 Apr 2001 00:00:00 EST',
-			    'Connection'    => 'Close'
-			];
+			'Content-Type'  => 'text/html; charset=UTF-8',
+			'Date'          => 'Sun, 01 Jan 2015 00:00:00 GMT',
+			'Server'        => 'tophub/' . $this->tophub_revi,
+			'X-Powered-By'  => 'PHP/' . phpversion(),
+			'Cache-Control' => 'no-cache, no-store, must-revalidate',
+			'Pragma'        => 'no-cache',
+			'Expires'       => 'Sat, 21 Apr 2001 00:00:00 EST',
+			'Connection'    => 'Close'
+		];
 
 	} // __construct
 
-	public function tophub() {
+	/* | Method | Endpoint             | Args            | Description           |
+	   | ------ | -------------------- | --------------- | --------------------- |
+	   | POST   | /v0/node/update.json | peerstats=array | Update your node info | */
+	/* --------------------------------------------------------------------------- */
+
+	public function tophub_peerstats() {
 
 		/* Log */
 		$LogInfo = [ "client-id" => $this->ipaddr, "total-peerstats" => count($this->peerstats) ];
@@ -61,9 +65,15 @@ class Peerstats extends Moloquent {
 
 		// $this->log->addNotice('ipaddr', [ $this->ipaddr ]);
 		// $this->log->addNotice('peerstats',  $this->peerstats );
+		/* ... */
+		// $this->tophub_method  =  Request::getMethod();    /*  POST, GET      */
+		// $this->tophub_method  = $request->getMethod();    /*  POST, GET      */
+		// $this->tophub_query   = $request->getQuery();     /*  POST, GET      */
+		// $this->tophub_path    = $request->getPath();      /*  /v0/node.json  */
+		// $this->tophub_clihead = $request->getHeaders();   /*  array          */
+
 		$this->log->addNotice('LogInfo()', $LogInfo);
 
-		/* Tophub */
 		$tophub_Obj = function ($request='foo', $tophub_Response='bar') use ($LogInfo)
 		{
 
@@ -71,35 +81,36 @@ class Peerstats extends Moloquent {
 			$tophub_sums++;
 			$reqbody = '';
 
-			/***********************************************************************/
-			// $tophub_method  = $request->getMethod();    /* POST, GET */
-			// $tophub_query   = $request->getQuery();     /* POST, GET */
-			// $tophub_path    = $request->getPath();      /* /v0/node.json */
-			// $tophub_clihead = $request->getHeaders();   /* array */
-			/***********************************************************************/
+			$function_validate_peerStats = function($p) {
 
-			/*
-			| Method | Endpoint             | Args            | Description           |
-			| ------ | -------------------- | --------------- | --------------------- |
-			| POST   | /v0/node/update.json | info=array      | Update your node info |
-			| POST   | /v0/node/update.json | peerstats=array | Update your node info |
-			*/
+				/* if '$insane' is true, we reject the peerstats post
+					because it was not found within this->struct_peerStats.
+				 */
+				$insane = false;
 
-			$tophub_method  = Request::getMethod();    /* POST, GET */
-			// $this->yell('string', "*!* TophubMethod Logic: $tophub_method");
+				$this->struct_peerStats = [
+					'version', 	// v15
+					'label', 	// 0000.0000.0000.0013
+					'pubkey', 	// xrj4g8klznc6ju2q1ljktlhff08c24lglmyqwtddtjy3vlsgrwq0.k
+					'state', 	// ESTABLISHED
+					'bytesin', 	// 25055604
+					'bytesout', // 20660416
+				];
 
-			$this->yell('string', 'Recieved ' . count($this->peerstats) . ' peerStats from:  $peerstats_from');
+				array_walk_recursive($p, function ($_v, $idx) use (&$insane) {
+					if (in_array($idx, $this->struct_peerStats) == true) {
+						// associated index acceptable
+						//
+					} else {
+						// associated index rejected
+						$insane = true;
+					}
+				});
+				return ($insane === true) ? 'rejected' : 'acceptable';
+			};
 
-			/*
-				[version] => v15
-				[label] => 0000.0000.0000.0013
-				[pubkey] => xrj4g8klznc6ju2q1ljktlhff08c24lglmyqwtddtjy3vlsgrwq0.k
-				[state] => ESTABLISHED
-				[bytesin] => 25055604
-				[bytesout] => 20660416
-			*/
-
-			return (object) [ 'update' => 'accepted' ];
+			$this->result = $function_validate_peerStats($this->peerstats);
+			return (object) [ 'update' => $this->result ];
 
 		};
 
@@ -131,15 +142,14 @@ class Peerstats extends Moloquent {
 
 	public function yell($type=false,$string=false,$bulletlist=null) {
 
-	    if((is_array($string)) || is_object($string)){
-	        print_r($string);
-	        return;
-	    } else {
-	        echo ColorCLI::getColoredString($string, 'white');
-	        print("\n");
-	    }
+		if((is_array($string)) || is_object($string)){
+			print_r($string);
+			return;
+		} else {
+			echo ColorCLI::getColoredString($string, 'white');
+			print("\n");
+		}
 	}
-
 
 
 }
@@ -212,5 +222,5 @@ class ColorCLI {
 $banner = function($msg='') {
 	$hub = ColorCLI::getColoredString('[topHub]', 'red');
 	return ($msg === '') ? $hub . PHP_EOL
-			     : $hub .' '. ColorCLI::getColoredString($msg, 'white') . PHP_EOL;
+				 : $hub .' '. ColorCLI::getColoredString($msg, 'white') . PHP_EOL;
 };

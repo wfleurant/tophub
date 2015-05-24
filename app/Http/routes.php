@@ -8,7 +8,14 @@ Route::get('/', 'HomeController@index');
 
 Route::group(['prefix' => 'api'], function()
 {
-    Route::post('v0/node/update.json',  'PeerStatsController@update');
+    Route::post('v0/node/update.json',  'PeerStatsController@peerstats_post');
+    Route::post('v0/node/info.json',  function() {
+        // 'PeerStatsController@peerstats_post');
+        /* | Method | Endpoint             | Args            | Description           |
+           | ------ | -------------------- | --------------- | --------------------- |
+           | POST   | /v0/node/update.json | info=array      | Update your node info | */
+        return (object) json_encode(['tophub_info' => false]);
+    });
     /*******************/
     /* Autocomplete v1 */
     /*******************/
