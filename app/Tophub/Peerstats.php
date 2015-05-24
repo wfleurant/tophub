@@ -118,7 +118,12 @@ class Peerstats extends Moloquent {
 	public function write ($data) {
 
 		/* Todo Mongo upsert */
-		$result[] = ['nosql' => 'updated', 'result' => [ '_id' => 'fc00cafe1234'] ];
+
+		$data['node'] = $this->ipaddr;
+		$col = \DB::collection($this->collection)
+				->insert($data);
+
+		$result[] = ['nosql' => 'updated', 'result' => [ '_id' => $col ] ];
 
 		/* Todo MySQL insert */
 		$result[] = ['mysql' => [ 'mysqli_insert_id' => rand(20000,99999)] ] ;
