@@ -20,9 +20,8 @@ class Peerstats extends Moloquent {
 		$this->peerstats=$peerstats;
 
 		$this->c=$c; $this->d=$d; $this->e=$e; $this->f=$f;
-
 		// Thanks for playing...
-		if (!is_array($this->Peerstats)) {
+		if (!is_array($this->peerstats)) {
 			$this->insane = true;
 			return;
 		}
@@ -77,9 +76,6 @@ class Peerstats extends Moloquent {
 		$tophub_Obj = function ($request='foo', $tophub_Response='bar') use ($LogInfo)
 		{
 
-			$tophub_sums = 0;
-			$tophub_sums++;
-			$reqbody = '';
 
 			$function_validate_peerStats = function($p) {
 
@@ -110,13 +106,25 @@ class Peerstats extends Moloquent {
 			};
 
 			$this->result = $function_validate_peerStats($this->peerstats);
-			return (object) [ 'update' => $this->result ];
+			return (object) [ 'update' => $this->result, 'data' => $this->peerstats ];
 
 		};
 
 		/* Nuke it */
 		return $tophub_Obj();
 
+	}
+
+	public function write ($data) {
+
+		/* Todo Mongo upsert */
+		$result[] = ['nosql' => 'updated', 'result' => [ '_id' => 'fc00cafe1234'] ];
+
+		/* Todo MySQL insert */
+		$result[] = ['mysql' => [ 'mysqli_insert_id' => rand(20000,99999)] ] ;
+
+		/************************************************/
+		return (object) [ $result ];
 	}
 
 	public function sqlHandoff ($data)
@@ -146,7 +154,8 @@ class Peerstats extends Moloquent {
 			print_r($string);
 			return;
 		} else {
-			echo ColorCLI::getColoredString($string, 'white');
+			$hub = ColorCLI::getColoredString('[topHub]', 'red');
+			echo ColorCLI::getColoredString("$hub $string", 'white');
 			print("\n");
 		}
 	}
@@ -157,19 +166,10 @@ class Peerstats extends Moloquent {
 
 
 // HubFunctions.php
-/*
-	Simple CLI color class -> https://gist.github.com/donatj/1315354
 
-	echo ColorCLI::getColoredString('Test');
-	echo ColorCLI::getColoredString('Test', 'blue');
-	echo ColorCLI::getColoredString('Test', null, 'blue');
-
-	print_r(ColorCLI::getForegroundColors());
-	print_r(ColorCLI::getBackgroundColors());
-
- */
 class ColorCLI {
-	static $foreground_colors = array(
+	// * Simple CLI color class -> https://gist.github.com/donatj/1315354
+	static $foreground_colors = [
 		'black'        => '0;30', 'dark_gray'    => '1;30',
 		'blue'         => '0;34', 'light_blue'   => '1;34',
 		'green'        => '0;32', 'light_green'  => '1;32',
@@ -178,49 +178,38 @@ class ColorCLI {
 		'purple'       => '0;35', 'light_purple' => '1;35',
 		'brown'        => '0;33', 'yellow'       => '1;33',
 		'light_gray'   => '0;37', 'white'        => '1;37',
-		);
+	];
 
-	static $background_colors = array(
+	static $background_colors = [
 		'black'        => '40', 'red'          => '41',
 		'green'        => '42', 'yellow'       => '43',
 		'blue'         => '44', 'magenta'      => '45',
 		'cyan'         => '46', 'light_gray'   => '47',
-		);
+	];
 
 	// Returns colored string
-	public static function getColoredString($string, $foreground_color = null, $background_color = null) {
+	public static function getColoredString($string, $foreground_color = null, $background_color = null)
+	{
 		$colored_string = "";
 
-	// Check if given foreground color found
+		// Check if given foreground color found
 		if ( isset(self::$foreground_colors[$foreground_color]) ) {
 			$colored_string .= "\033[" . self::$foreground_colors[$foreground_color] . "m";
 		}
-	// Check if given background color found
+
+		// Check if given background color found
 		if ( isset(self::$background_colors[$background_color]) ) {
 			$colored_string .= "\033[" . self::$background_colors[$background_color] . "m";
 		}
 
-	// Add string and end coloring
+		// Add string and end coloring
 		$colored_string .=  $string . "\033[0m";
 
 		return $colored_string;
 	}
-
 	// Returns all foreground color names
-	public static function getForegroundColors() {
-		return array_keys(self::$foreground_colors);
-	}
-
+	public static function getForegroundColors() { return array_keys(self::$foreground_colors); }
 	// Returns all background color names
-	public static function getBackgroundColors() {
-		return array_keys(self::$background_colors);
-	}
+	public static function getBackgroundColors() { return array_keys(self::$background_colors); }
 }
 
-
-
-$banner = function($msg='') {
-	$hub = ColorCLI::getColoredString('[topHub]', 'red');
-	return ($msg === '') ? $hub . PHP_EOL
-				 : $hub .' '. ColorCLI::getColoredString($msg, 'white') . PHP_EOL;
-};
