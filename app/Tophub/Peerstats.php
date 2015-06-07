@@ -103,9 +103,8 @@ class Peerstats extends Moloquent {
 					} elseif (in_array($idx, $this->struct_peerStats_Lua) == true) {
 						// associated index acceptable
 					} else {
-						print($idx);
-						print("\n");
-						// associated index rejected
+						// associated index rejected:
+						// print($idx . "\n");
 						$insane = true;
 					}
 				});
