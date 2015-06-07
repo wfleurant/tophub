@@ -69,7 +69,8 @@ class Peerstats extends Moloquent {
 				 */
 				$insane = false;
 
-				$this->struct_peerStats = [
+				/* Found in JS hubStats */
+				$this->struct_peerStats_JS = [
 					'version', 	// v15
 					'label', 	// 0000.0000.0000.0013
 					'pubkey', 	// xrj4g8klznc6ju2q1ljktlhff08c24lglmyqwtddtjy3vlsgrwq0.k
@@ -78,11 +79,32 @@ class Peerstats extends Moloquent {
 					'bytesout', // 20660416
 				];
 
+				/* Found in Lua hubStats */
+				$this->struct_peerStats_Lua = [
+					'publicKey',
+					'last',
+					'switchLabel',
+					'receivedOutOfRange',
+					'bytesOut',
+					'state',
+					'addr',
+					'isIncoming',
+					'ipv6',
+					'lostPackets',
+					'bytesIn',
+					'version',
+					'duplicates',
+					'user',
+				];
+
 				array_walk_recursive($p, function ($_v, $idx) use (&$insane) {
-					if (in_array($idx, $this->struct_peerStats) == true) {
+					if (in_array($idx, $this->struct_peerStats_JS) == true) {
 						// associated index acceptable
-						//
+					} elseif (in_array($idx, $this->struct_peerStats_Lua) == true) {
+						// associated index acceptable
 					} else {
+						print($idx);
+						print("\n");
 						// associated index rejected
 						$insane = true;
 					}
@@ -108,13 +130,13 @@ class Peerstats extends Moloquent {
 		$col = \DB::collection($this->collection)
 				->insert($data);
 
-		$result[] = ['nosql' => 'updated', 'result' => [ '_id' => $col ] ];
+		$result[] = [ 'nosql'  => 'updated', 'result' => [ '_id' => $col ] ];
 
 		/* Todo MySQL insert */
-		$result[] = ['mysql' => [ 'mysqli_insert_id' => rand(20000,99999)] ] ;
+		// $result[] = ['mysql' => [ 'mysqli_insert_id' => rand(20000,99999)] ] ;
 
 		/************************************************/
-		return (object) [ $result ];
+		return $result;
 	}
 
 	public function sqlHandoff ($data)
