@@ -7,7 +7,7 @@ use Monolog\Handler\StreamHandler;
 use App\Tophub\Peerstats;
 use App\Tophub\Toolshed;
 
-class PeerstatsController extends Controller {
+class PeerStatsController extends Controller {
 
 	protected $rejected_resp = ['result' => 'rejected' ];
 
