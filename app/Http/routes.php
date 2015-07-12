@@ -5,6 +5,8 @@
 */
 
 Route::get('/', 'HomeController@index');
+// Route::get('/nodes', 'NodeController@view');
+Route::get('/nodes', 'HomeController@index');
 
 Route::group(['prefix' => 'api'], function()
 {
@@ -23,7 +25,7 @@ Route::group(['prefix' => 'api'], function()
     /************************************/
     /* Node v0 - Spec not yet finalized */
     /************************************/
-    Route::get('node/{id}/info.json', function($id) {
+/*    Route::get('node/{id}/info.json', function($id) {
        return response()->json([
         'response_code'=> 500,
         'error'=>true,
@@ -40,6 +42,7 @@ Route::group(['prefix' => 'api'], function()
         'error_message'=>'Endpoint is temporarily unavailable.',
         ], 500, [], JSON_PRETTY_PRINT);
    });
+   */
     Route::get('v0/node/{ip}/peers.json', 'ApiController@getNodePeers');
     /******************************************/
     /* Node Website APIs (not for public use) */
@@ -81,6 +84,7 @@ Route::group(['prefix' => 'nodes'], function()
         'uses'  => 'NodeController@view'
         ]);
 });
+
 
 Route::controllers([
 	'auth' => 'Auth\AuthController',

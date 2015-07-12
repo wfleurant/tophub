@@ -11,10 +11,11 @@ class ApiController extends Controller {
 
 
 	public function getNodePeers($ip) {
-		
-		$peers = Node::findOrFail($ip)->peers->lists('peer_key');
 
-		return response()->json($peers);
+		// $peers = Node::findOrFail($ip)->peers->lists('peer_key');
+
+		return response()->json($ip);
+		// return response()->json($peers);
 
 	}
 	/**
@@ -108,7 +109,7 @@ class ApiController extends Controller {
 					case 'lng':
 						$node->lng = $v;
 						break;
-					
+
 					default:
 						break;
 				}
