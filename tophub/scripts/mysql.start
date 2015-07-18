@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+showhelp() {
+	b='[tophub]'
+	echo "$b Usage: $(basename $0) <bg,nobg>"
+	exit
+}
+[ -z $1 ] && showhelp
+
+#----------------------------------------------------------------------------
+param1=false
+[ $1 == "bg" ] && param1="bg"
+[ $1 == "nobg" ] && param1="nobg"
+[ $param1 == false ] && showhelp
+
+#----------------------------------------------------------------------------
+env_source=false
+[ -f ../.env ] && env_source=../.env
+[ -f ./.env  ] && env_source=./.env
+
+mysql_docker_script=false
+[ -f ./scripts/mysql.docker ] && mysql_docker_script=./scripts/mysql.docker
+[ -f ./mysql.docker ] && mysql_docker_script=./mysql.docker
+
+#----------------------------------------------------------------------------
+
+# after sanity check source (in order) the artisan-env and docker-script files 
+for sanity in env_source mysql_docker_script; do 
+	# sanity
+	[ "$(eval echo \$$sanity)" == false ] \
+		&& echo "Failed to find: \"$sanity\"" \
+		&& exit
+
+	# automagik :(
+	[ "$(eval echo \$$sanity)" != false ] \
+		&& eval source \$$sanity
+done
+
+#----------------------------------------------------------------------------
+# Main Start 
+
+# mysql hostname/interface fixup 
+[ $DB_HOST == 'localhost' ] \
+	&& DB_HOSTMV='127.0.0.1' \
+	|| DB_HOSTMV=$DB_HOST
+mysql_connection="mysql --host=$DB_HOSTMV --port=$DB_PORT -u$DB_USERNAME -p$DB_PASSWORD $DB_DATABASE"
+
+echo -e "\e[32m--------------------------------------------------------------------"
+echo -e "MySQL Docker script \t ${mysql_docker_script}"
+echo -e "Artisan Environment \t ${env_source}"
+echo -e "MYSQL_DATABASE \t\t ${MYSQL_DATABASE}"
+echo -e "MYSQL_ROOT_PASSWORD \t ${MYSQL_ROOT_PASSWORD}"
+echo -e "MYSQL_USER \t\t ${MYSQL_USER}"
+echo -e "MYSQL_PASSWORD \t\t ${MYSQL_PASSWORD}"
+echo -e "MySQL Connection: \t $mysql_connection"
+echo -e "--------------------------------------------------------------------\e[0m"
+echo 
+ 
+docker_run $param1
