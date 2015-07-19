@@ -12,9 +12,9 @@ $app = new Laravel\Lumen\Application(
 
 
 /* Register Container Bindings
-	$app->withFacades();
 */
 
+$app->withFacades();
 $app->register('Jenssegers\Mongodb\MongodbServiceProvider');
 $app->withEloquent();
 
