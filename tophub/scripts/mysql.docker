@@ -23,7 +23,7 @@ prand() {
 #----------------------------------------------------------------------------
 
 function docker_run() {
-	[ $(which docker) -eq 1 ] && exit
+	[ $(which docker >/dev/null ; echo $?) -eq 1 ] && exit
 	[ $1 ] || exit
 
 	stdio_param='--detach=false'
