@@ -73,10 +73,10 @@ class DatabaseSeeder extends Seeder {
 
         while ($rowidx <= $nmapper) {
 
-          printf("\n$this->logo rowidx: %s", $rowidx);
 
           for ($node=0; $node <= $totalNodes; $node++) {
 
+            printf("\n$this->logo rowidx: %s", $rowidx);
             $makekeys = $this->makeKeys(true, $genKey);
             $addr = $makekeys['ipv6'];
             $public_key = $makekeys['pubKey'];
@@ -86,7 +86,7 @@ class DatabaseSeeder extends Seeder {
                 [
                     'addr' => $addr,
                     'public_key' => $public_key,
-                    'hostname' => $faker->colorName() . '-' . $faker->colorName() . '.hype',
+                    'hostname' => $faker->colorName() . '-' . $faker->colorName() . $faker->numberBetween(0,999999) . '.hype',
                     'ownername' => $faker->firstName(),
                     'city' => $faker->city(),
                     'province' => $faker->cityPrefix(),
@@ -103,6 +103,8 @@ class DatabaseSeeder extends Seeder {
             )); /* End of DB::table */
             $rowidx++;
           }
+
+        Model::reguard();
       }
     } /* ->run */
 }
