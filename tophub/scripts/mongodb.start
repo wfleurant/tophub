@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+showhelp() {
+	b='[tophub]'
+	echo "$b Usage: $(basename $0) <bg,nobg>"
+	exit
+}
+[ -z $1 ] && showhelp
+
+#----------------------------------------------------------------------------
+param1=false
+[ $1 == "bg" ] && param1="bg"
+[ $1 == "nobg" ] && param1="nobg"
+[ $param1 == false ] && showhelp
+
+#----------------------------------------------------------------------------
+env_source=false
+[ -f ../.env ] && env_source=../.env
+[ -f ./.env  ] && env_source=./.env
+
+mongodb_docker_script=false
+[ -f ./scripts/mongodb.docker ] && mongodb_docker_script=./scripts/mongodb.docker
+[ -f ./mongodb.docker ] && mongodb_docker_script=./mongodb.docker
+
+#----------------------------------------------------------------------------
+
+# after sanity check source (in order) the artisan-env and docker-script files 
+for sanity in env_source mongodb_docker_script; do 
+	# sanity
+	[ "$(eval echo \$$sanity)" == false ] \
+		&& echo "Failed to find: \"$sanity\"" \
+		&& exit
+
+	# automagik :(
+	[ "$(eval echo \$$sanity)" != false ] \
+		&& eval source \$$sanity
+done
+
+#----------------------------------------------------------------------------
+# Main Start 
+
+# mongodb hostname/interface fixup 
+[ $DB_HOST == 'localhost' ] \
+	&& DB_HOSTMV='127.0.0.1' \
+	|| DB_HOSTMV=$DB_HOST
+mongodb_connection="mongodb --host=$DB_HOSTMV --port=$DB_PORT -u$DB_USERNAME -p$DB_PASSWORD $DB_DATABASE"
+
+echo -e "\e[32m--------------------------------------------------------------------"
+echo -e "MongoDB Docker script \t ${mongodb_docker_script}"
+echo -e "Artisan Environment \t ${env_source}"
+echo -e "NOSQL_DATABASE \t\t ${NOSQL_DATABASE}"
+echo -e "NOSQL_ROOT_PASSWORD \t ${NOSQL_ROOT_PASSWORD}"
+echo -e "NOSQL_USER \t\t ${NOSQL_USER}"
+echo -e "NOSQL_PASSWORD \t\t ${NOSQL_PASSWORD}"
+echo -e "MongoDB Connection: \t $mongodb_connection"
+echo -e "--------------------------------------------------------------------\e[0m"
+echo 
+ 
+docker_run $param1

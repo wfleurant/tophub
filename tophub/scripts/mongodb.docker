@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+prand() {
+	cat /dev/urandom | tr -dc a-zA-Z0-9 | fold -w 8 | head -n 1
+}
+
+#----------------------------------------------------------------------------
+[ -z $NOSQL_ROOT_PASSWORD ] \
+	&& NOSQL_ROOT_PASSWORD="rootpw-$(prand)"
+
+[ -z $NOSQL_DATABASE ] \
+	&& export NOSQL_DATABASE="mysql-db" \
+	|| export NOSQL_DATABASE=$NOSQL_DATABASE
+
+[ -z $NOSQL_USERNAME ] \
+	&& export NOSQL_USER="dbuser-$(prand)" \
+	|| export NOSQL_USER=$NOSQL_USERNAME
+
+[ -z $NOSQL_PASSWORD ] \
+	&& export NOSQL_PASSWORD="dbpass-$(prand)" \
+	|| export NOSQL_PASSWORD=$NOSQL_PASSWORD
+
+#----------------------------------------------------------------------------
+
+function docker_run() {
+	[ $(which docker >/dev/null ; echo $?) -eq 1 ] && exit
+	[ $1 ] || exit
+
+	stdio_param='--detach=false'
+	[ $1 == "bg"   ] && stdio_param='--detach=true '
+	[ $1 == "nobg" ] && stdio_param='--detach=false --rm '
+	docker run \
+		-p 27017:27017 \
+		$stdio_param \
+		mongo:2.6 
+		  # 3.0 gets you --storageEngine=wiredTiger
+
+}
