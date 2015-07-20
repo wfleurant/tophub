@@ -1,5 +1,2 @@
+/vendor
 .env
-makekeys
-node_modules
-storage/
-vendor/
