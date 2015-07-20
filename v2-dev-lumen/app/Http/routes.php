@@ -3,6 +3,10 @@
 use App\Tophub\Peerstats;
 use App\Tophub\Logger;
 
+$app->get('/', function () {
+    return response()->json(['version'=> 'v2-staging']);
+});
+
 /*===================================================================================
         88""Yb 888888 888888 88""Yb .dP"Y8 888888    db    888888 .dP"Y8
         88__dP 88__   88__   88__dP `Ybo."   88     dPYb     88   `Ybo."
