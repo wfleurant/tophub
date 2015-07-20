@@ -1,0 +1,55 @@
+nginx:
+  build: images/nginx
+  command: nginx -g "daemon off;"
+  links:
+    - php
+  ports:
+    - "80:80"
+php:
+  build: images/php
+  volumes:
+    - images/php/app:/app
+  working_dir: /app/public
+  command: php-fpm
+  links:
+    - db
+    - cache
+    - mysql
+  ports:
+    - "9000:9000"
+  environment:
+    APP_ENV: local
+    APP_DEBUG: true
+    APP_KEY: Example-HGz0ORk
+    APP_LOCALE: en
+    APP_FALLBACK_LOCALE: en
+    DB_DEFAULT: mongodb
+    DB_CONNECTION: mongodb
+    DB_HOST: 127.0.0.1
+    DB_DATABASE: tophub-db
+    DB_USERNAME: tophub-user
+    DB_PASSWORD: tophub-pass
+    MEMCACHED_HOST: cache
+    CACHE_DRIVER: memcached
+    SESSION_DRIVER: memcached
+    QUEUE_DRIVER: database
+cache:
+  image: memcached
+db:
+  image: mongo:2.6
+  ports:
+      - "27017:27017"
+  environment:
+    NOSQL_CONNECTION: mongodb
+    NOSQL_HOST: 127.0.0.1
+    NOSQL_PORT: 27017
+    NOSQL_DATABASE: tophub-db
+mysql:
+  image: mysql
+  ports:
+    - "3306:3306"
+  environment:
+    MYSQL_ROOT_PASSWORD: Example-c5DaPD
+    MYSQL_DATABASE: tophub-db
+    MYSQL_USER: tophub-user
+    MYSQL_PASSWORD: tophub-pass
