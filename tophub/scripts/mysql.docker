@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+prand() {
+	cat /dev/urandom | tr -dc a-zA-Z0-9 | fold -w 8 | head -n 1
+}
+
+#----------------------------------------------------------------------------
+[ -z $MYSQL_ROOT_PASSWORD ] \
+	&& MYSQL_ROOT_PASSWORD="rootpw-$(prand)"
+
+[ -z $DB_DATABASE ] \
+	&& export MYSQL_DATABASE="mysql-db" \
+	|| export MYSQL_DATABASE=$DB_DATABASE
+
+[ -z $DB_USERNAME ] \
+	&& export MYSQL_USER="dbuser-$(prand)" \
+	|| export MYSQL_USER=$DB_USERNAME
+
+[ -z $DB_PASSWORD ] \
+	&& export MYSQL_PASSWORD="dbpass-$(prand)" \
+	|| export MYSQL_PASSWORD=$DB_PASSWORD
+
+#----------------------------------------------------------------------------
+
+function docker_run() {
+	[ $(which docker >/dev/null ; echo $?) -eq 1 ] && exit
+	[ $1 ] || exit
+
+	stdio_param='--detach=false'
+	[ $1 == "bg"   ] && stdio_param='--detach=true '
+	[ $1 == "nobg" ] && stdio_param='--detach=false --rm '
+
+	docker run \
+		-p 3306:3306 \
+		$stdio_param \
+		-e MYSQL_DATABASE=${MYSQL_DATABASE} \
+		-e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+		-e MYSQL_USER=${MYSQL_USER} \
+		-e MYSQL_PASSWORD=${MYSQL_PASSWORD} \
+		mysql
+}
