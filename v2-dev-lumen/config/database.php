@@ -23,11 +23,11 @@ return [
 
         'mongodb' => [
             'driver'   => 'mongodb',
-            'host'     => env('NOSQL_HOST', 'public-tophub.h'),
+            'host'     => env('NOSQL_HOST', '172.17.42.1'),
             'port'     => env('NOSQL_PORT', '27017'),
             'database' => env('NOSQL_DATABASE', 'tophub-db'),
-            'username' => env('NOSQL_USERNAME', 'tophub-user'),
-            'password' => env('NOSQL_PASSWORD', 'tophub-pass'),
+            'username' => env('NOSQL_USERNAME', ''),
+            'password' => env('NOSQL_PASSWORD', ''),
             'options'  => [ 'db' => 'admin' ],
         ],
 

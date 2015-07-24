@@ -12,9 +12,9 @@ php:
   working_dir: /app/public
   command: php-fpm
   links:
-    - db
+    - mongodb
     - cache
-    - mysql
+    # - mysql
   ports:
     - "9000:9000"
   environment:
@@ -35,7 +35,7 @@ php:
     QUEUE_DRIVER: database
 cache:
   image: memcached
-db:
+mongodb:
   image: mongo:2.6
   ports:
       - "27017:27017"
@@ -44,12 +44,12 @@ db:
     NOSQL_HOST: 127.0.0.1
     NOSQL_PORT: 27017
     NOSQL_DATABASE: tophub-db
-mysql:
-  image: mysql
-  ports:
-    - "3306:3306"
-  environment:
-    MYSQL_ROOT_PASSWORD: Example-c5DaPD
-    MYSQL_DATABASE: tophub-db
-    MYSQL_USER: tophub-user
-    MYSQL_PASSWORD: tophub-pass
+# mysql:
+#   image: mysql
+#   ports:
+#     - "3306:3306"
+#   environment:
+#     MYSQL_ROOT_PASSWORD: Example-c5DaPD
+#     MYSQL_DATABASE: tophub-db
+#     MYSQL_USER: tophub-user
+#     MYSQL_PASSWORD: tophub-pass
