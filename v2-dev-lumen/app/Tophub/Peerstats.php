@@ -9,7 +9,7 @@ class Peerstats extends Eloquent {
 
 	function __construct($ipaddr=null, $peerstats=null) {
 
-		$this->ipaddr=$ipaddr;
+		$this->node=$ipaddr;
 		$this->peerstats=$peerstats;
 
 		if (!is_array($this->peerstats)) {
