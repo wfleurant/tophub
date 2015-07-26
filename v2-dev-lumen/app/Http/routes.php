@@ -24,24 +24,35 @@ $app->post('/api/v0/node/update.json', function () {
     }
 
     $pStats = new Peerstats($ipaddr, $peerstats);
-
-    // return response()->json([ $ipaddr, $peerstats, $pStats]);
-
     $result = (object) $pStats->tophub_peerstats();
 
-    $psc = count($result->data);
-    $psf = $pStats->ipaddr;
-    $psr = $result->update;
-
-    Logger::writeln('info', $psr . ': ' . $psc . ' peerStats from: ' .  $psf);
-
     if ($result->update == 'acceptable') {
+
+        $psw = $pStats->save();
+
         // ::: acceptable :::
-        $psw = $pStats->write($result->data);
-        Logger::writeln('info', "Database wrote $psc PeerStats: " . json_encode($psw, true));
-    } elseif ($result->update == 'rejected') {
+        if ($psw) {
+            $psc = count($result->data);
+            $psf = $pStats->ipaddr;
+            $psr = $result->update;
+            Logger::writeln('info', "Database wrote $psc PeerStats: " . json_encode($psw, true));
+        } else {
+            Logger::writeln('error', "Database Unreachable - Lost $psc PeerStats: " . json_encode($psw, true));
+        }
+
+    } else if ($result->update == 'rejected') {
         // ::: rejected :::
-        Logger::writeln('info', "Database Rejected $psc PeerStats: " . json_encode($psw, true));
+        $save_rejected = false;
+        if ($save_rejected) {
+            $psw = $pStats->save();
+            Logger::writeln('info',
+                "Tophub Rejecting PeerStats: Attempting to save to DB");
+        } else {
+            Logger::writeln('info',
+                "Tophub Rejecting PeerStats: Nothing written to DB");
+        }
+    } else {
+        Logger::writeln('error', "Unknown peerstats error!");
     }
 
     return json_encode(['result' => $result->update ]);
@@ -49,7 +60,9 @@ $app->post('/api/v0/node/update.json', function () {
 });
 /*====================================================================================*/
 
+/*
 
+*/
 
 /*====================================================================================*/
 /* xxx Template */

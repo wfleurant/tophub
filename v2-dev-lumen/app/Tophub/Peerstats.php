@@ -5,7 +5,7 @@ use Jenssegers\Mongodb\Model as Eloquent;
 class Peerstats extends Eloquent {
 
 	protected $collection = 'peerstats';
-	protected $connection = 'mongo';
+	protected $connection = 'mongodb';
 
 	function __construct($ipaddr=null, $peerstats=null) {
 
@@ -99,6 +99,8 @@ class Peerstats extends Eloquent {
 						$insane = true;
 					}
 				});
+				unset($this->struct_peerStats_JS);
+				unset($this->struct_peerStats_Lua);
 				return ($insane === true) ? 'rejected' : 'acceptable';
 			};
 
@@ -110,16 +112,6 @@ class Peerstats extends Eloquent {
 		/* Nuke it */
 		return $tophub_Obj();
 
-	}
-
-	public function write ($data) {
-
-		$data['node'] = $this->ipaddr;
-		$col = \DB::collection($this->collection)
-				->insert($data);
-
-		$result[] = [ 'nosql'  => 'updated', 'result' => [ '_id' => $col ] ];
-		return $result;
 	}
 
 }
