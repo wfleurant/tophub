@@ -2,6 +2,7 @@
 
 use App\Tophub\Peerstats;
 use App\Tophub\Logger;
+use App\Tophub\Req;
 
 $app->get('/', function () {
     return response()->json(['version'=> 'v2-staging']);
@@ -14,7 +15,7 @@ $app->get('/', function () {
         88     888888 888888 88  Yb 8bodP'   88   dP""""Yb   88   8bodP'
 =====================================================================================*/
 $app->post('/api/v0/node/update.json', function () {
-    $ipaddr = \Request::ip();
+    $ipaddr = Req::ip();
     $peerstats = \Request::json()->get('peerstats');
 
     Logger::writeln('info', 'Peerstats from: ' . $ipaddr);

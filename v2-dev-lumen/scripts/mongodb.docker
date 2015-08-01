@@ -14,11 +14,11 @@ prand() {
 
 [ -z $NOSQL_USERNAME ] \
 	&& export NOSQL_USER="dbuser-$(prand)" \
-	|| export NOSQL_USER=$NOSQL_USERNAME
+	|| export NOSQL_USER=
 
 [ -z $NOSQL_PASSWORD ] \
 	&& export NOSQL_PASSWORD="dbpass-$(prand)" \
-	|| export NOSQL_PASSWORD=$NOSQL_PASSWORD
+	|| export NOSQL_PASSWORD=
 
 #----------------------------------------------------------------------------
 
@@ -30,9 +30,9 @@ function docker_run() {
 	[ $1 == "bg"   ] && stdio_param='--detach=true '
 	[ $1 == "nobg" ] && stdio_param='--detach=false --rm '
 	docker run \
-		-p 27017:27017 \
+		-p 172.17.42.1:27017:27017 \
 		$stdio_param \
-		mongo:2.6 
+		mongo:2.6
 		  # 3.0 gets you --storageEngine=wiredTiger
 
 }
